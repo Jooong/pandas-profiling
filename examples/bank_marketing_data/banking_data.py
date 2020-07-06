@@ -6,6 +6,7 @@ import pandas as pd
 
 from pandas_profiling import ProfileReport
 from pandas_profiling.utils.cache import cache_file
+import time
 
 if __name__ == "__main__":
     file_name = cache_file(
@@ -15,8 +16,11 @@ if __name__ == "__main__":
 
     # Download the UCI Bank Marketing Dataset
     df = pd.read_csv(file_name, sep=";")
-
+    
     profile = ProfileReport(
         df, title="Profile Report of the UCI Bank Marketing Dataset", explorative=True
     )
+    
+    t = time.time()
     profile.to_file(Path("uci_bank_marketing_report.html"))
+    print(f">>> total exec: {time.time()-t:.4f}")

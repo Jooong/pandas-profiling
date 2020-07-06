@@ -6,6 +6,10 @@ import matplotlib.cbook
 import seaborn as sns
 from pandas.plotting import register_matplotlib_converters, deregister_matplotlib_converters
 from pkg_resources import resource_filename
+import time
+
+setting = [0., 0]
+restoring = [0., 0]
 
 
 @contextlib.contextmanager
@@ -74,12 +78,26 @@ def manage_matplotlib_context():
     }
 
     try:
+        tic = time.time()
         register_matplotlib_converters()
         matplotlib.rcParams.update(customRcParams)
         sns.set_style(style="white")
+        setting_time = time.time() - tic
+        setting[0] += setting_time
+        setting[1] += 1
         yield
     finally:
+        tic = time.time()
         deregister_matplotlib_converters() # revert to original unit registries
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
             matplotlib.rcParams.update(originalRcParams) # revert to original rcParams
+        restoring_time = time.time() - tic
+        restoring[0] += restoring_time
+        restoring[1] += 1
+        avg_setting_time = setting[0] / setting[1]
+        avg_restoring_time = restoring[0] / restoring[1]
+        avg_total_overhead = (setting[0] + restoring[0]) / setting[1]
+        print(f">>> setting: {setting_time:.5f} (avg: {avg_setting_time:.5f}) (total: {setting[0]:.3f})")
+        print(f">>> restoring: {restoring_time:.5f} (avg: {avg_restoring_time:.5f}) (total: {restoring[0]:.3f})")
+        print(f">>> total overhaed: {setting_time + restoring_time:.5f} (avg: {avg_total_overhead:.5f}) (total: {setting[0] + restoring[0]:.3f})")
